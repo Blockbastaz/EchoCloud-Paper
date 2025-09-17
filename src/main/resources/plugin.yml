@@ -1,0 +1,7 @@
+name: EchoCloud-Paper
+version: '1.0'
+main: dev.echocloud.EchoCloud
+api-version: '1.21'
+authors: [ Blockbastaz ]
+description: Velaris Proxy Plugin
+website: Velaris.space
