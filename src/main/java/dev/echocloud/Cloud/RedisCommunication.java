@@ -18,12 +18,10 @@ public class RedisCommunication extends CloudCommunication {
     private String password = "";
     private int database = 0;
     private String channel = "echocloud:all";
-    private final CloudStorage cloudStorage;
 
     public RedisCommunication(String baseUrl, String serverId, String authToken, CloudLogger logger, Server server) {
         super(baseUrl, serverId, authToken, logger, server);
         this.eventManager = new EchoCloudEventManager("redis", serverId, server);
-        this.cloudStorage = CloudStorage.fromCommunication(this, logger);
     }
 
     public void setPassword(String password) {

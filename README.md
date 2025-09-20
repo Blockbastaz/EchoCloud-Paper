@@ -118,6 +118,58 @@ Dort kannst du:
 
 ---
 
+## 🔧 API Integration
+
+Die **EchoCloud API** kann direkt als JAR-Datei in dein Projekt eingebunden werden.
+Dadurch kannst du in eigenen Plugins auf EchoCloud zugreifen (z. B. für Cloud-Events, Logging oder Kommunikation).
+
+### 1. Einbindung der API (Maven)
+
+Lege die `echocloud-paper-1.0.jar` in den `libs/` Ordner deines Projekts und füge folgende Dependency in dein `pom.xml` ein:
+
+```xml
+<dependency>
+    <groupId>dev.echocloud</groupId>
+    <artifactId>echocloud-api</artifactId>
+    <version>1.0.0</version>
+    <scope>system</scope>
+    <systemPath>${project.basedir}/libs/echocloud-paper-1.0.jar</systemPath>
+</dependency>
+```
+
+⚡ Hinweis: Mit dem `maven-shade-plugin` kannst du die API auf Wunsch in dein eigenes JAR „shaden“ und optional mit `relocations` umbenennen, um Konflikte zu vermeiden.
+
+### 2. Initialisierung der API
+
+Die EchoCloud API wird beim Start deines Plugins automatisch vom **ServicesManager** von Bukkit registriert.
+Du kannst sie in deinem `onEnable()` wie folgt abrufen:
+
+```java
+@Override
+public void onEnable() {
+    RegisteredServiceProvider<EchoCloudAPI> rsp =
+            getServer().getServicesManager().getRegistration(EchoCloudAPI.class);
+
+    if (rsp != null) {
+        EchoCloudAPI api = rsp.getProvider();
+
+        CloudCommunication communication = api.getCommunication();
+        if (communication != null && api.isConnected()) {
+            communication.getCloudStorage().store("key", "value"); // Beispiel: Wert in der Cloud speichern
+        }
+    } else {
+        getLogger().warning("EchoCloud API konnte nicht geladen werden!");
+    }
+}
+```
+Füge in deiner **plugin.yml** echocloud-paper als Abhängigkeit hinzu:
+```java
+depend: ["echocloud-paper"]
+```
+Damit stehen dir alle **CloudCommunication**-Methoden zur Verfügung (`sendMessage`, `getMetrics`, Events usw.).
+
+---
+
 ## 📞 Support
 
 Eröffne ein Issue auf GitHub oder kontaktiere das Entwicklerteam von EchoCloud.

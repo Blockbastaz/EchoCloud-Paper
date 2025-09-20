@@ -19,6 +19,7 @@ public abstract class CloudCommunication {
     protected volatile boolean connected = false;
     protected final Gson gson = new Gson();
     protected final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+    protected final CloudStorage cloudStorage;
     protected final Server server;
 
     protected ServerMetricsProvider metricsProvider;
@@ -44,6 +45,7 @@ public abstract class CloudCommunication {
         this.authToken = authToken;
         this.logger = logger;
         this.server = server;
+        this.cloudStorage = CloudStorage.fromCommunication(this, logger);
     }
 
     public void setMetricsProvider(ServerMetricsProvider provider) {
@@ -64,6 +66,9 @@ public abstract class CloudCommunication {
 
     public boolean isConnected() {
         return connected;
+    }
+    public CloudStorage getCloudStorage() {
+        return cloudStorage;
     }
 
     public abstract void connect();

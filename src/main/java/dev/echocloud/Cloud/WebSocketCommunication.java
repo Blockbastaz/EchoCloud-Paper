@@ -16,7 +16,6 @@ public class WebSocketCommunication extends CloudCommunication {
     private final OkHttpClient httpClient;
     private WebSocket webSocket;
     private int reconnectAttempts = 0;
-    private final CloudStorage cloudStorage;
 
     public WebSocketCommunication(String baseUrl, String serverId, String authToken, CloudLogger logger, boolean trustAllCerts, Server server) {
         super(baseUrl, serverId, authToken, logger, server);
@@ -44,7 +43,6 @@ public class WebSocketCommunication extends CloudCommunication {
         }
 
         this.httpClient = builder.build();
-        this.cloudStorage = CloudStorage.fromCommunication(this, logger);
     }
 
     @Override
