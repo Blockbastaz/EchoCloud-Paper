@@ -34,7 +34,7 @@ Sie ermöglicht eine sichere bidirektionale Kommunikation zwischen EchoCloud und
 
 ## ⚙️ Voraussetzungen
 
-- Paper 1.20+
+- Paper 1.21+
 - Java 17+
 - Verbindung zu einer laufenden [EchoCloud-Instanz](https://github.com/Blockbastaz/EchoCloud)
 

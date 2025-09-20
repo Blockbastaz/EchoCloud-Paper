@@ -22,6 +22,17 @@ public class EchoCloudEventManager {
     }
 
     /**
+     * Feuert ein Server Communication Event (Server zu Server)
+     */
+
+    public void fireServerCommunication(String targetServerId, String messageType, String payload, boolean successful) {
+        EchoCloudServerCommunicationEvent event = new EchoCloudServerCommunicationEvent(
+                communicationType, serverId, targetServerId, messageType, payload, successful
+        );
+        pluginManager.callEvent(event);
+    }
+
+    /**
      * Feuert ein Connection Established Event
      */
     public void fireConnectionEstablished(String connectionUrl, boolean isReconnect) {

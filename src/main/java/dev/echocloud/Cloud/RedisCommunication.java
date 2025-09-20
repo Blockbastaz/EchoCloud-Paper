@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 public class RedisCommunication extends CloudCommunication {
     private Jedis publishJedis;
     private Jedis subscribeJedis;
-    private volatile boolean connected = false;
     private Thread subscribeThread;
     private int reconnectAttempts = 0;
     private EchoCloudEventManager eventManager;
@@ -19,10 +18,12 @@ public class RedisCommunication extends CloudCommunication {
     private String password = "";
     private int database = 0;
     private String channel = "echocloud:all";
+    private final CloudStorage cloudStorage;
 
     public RedisCommunication(String baseUrl, String serverId, String authToken, CloudLogger logger, Server server) {
         super(baseUrl, serverId, authToken, logger, server);
         this.eventManager = new EchoCloudEventManager("redis", serverId, server);
+        this.cloudStorage = CloudStorage.fromCommunication(this, logger);
     }
 
     public void setPassword(String password) {
@@ -58,7 +59,7 @@ public class RedisCommunication extends CloudCommunication {
                 subscribeJedis.select(database);
             }
 
-            connected = true;
+            this.connected = true;
             boolean isReconnect = reconnectAttempts > 0;
             reconnectAttempts = 0;
 
@@ -273,9 +274,9 @@ public class RedisCommunication extends CloudCommunication {
     @Override
     public void disconnect() {
         connected = false;
+        cloudStorage.close();
 
-        // SHUTDOWN EVENT FEUERN - Manual disconnect
-        eventManager.fireShutdown("Manual disconnect", true);
+        eventManager.fireShutdown("Cloud Disconnect", true);
 
         if (subscribeThread != null && subscribeThread.isAlive()) {
             subscribeThread.interrupt();
@@ -303,53 +304,36 @@ public class RedisCommunication extends CloudCommunication {
         if (!connected || publishJedis == null) {
             logger.warn("[EchoCloud][Redis] Kann Server-Nachricht nicht senden - nicht verbunden");
 
-            // SERVER COMMUNICATION EVENT FEUERN - Failed
-            if (eventManager != null) {
-                // Hier müsste eine entsprechende fireServerCommunication Methode im EventManager erstellt werden
-                // eventManager.fireServerCommunication(targetServerId, messageType, payload, false);
-            }
+            eventManager.fireServerCommunication(targetServerId, messageType, payload, false);
             return;
         }
 
         try {
-            // Custom Message Format für Server-zu-Server Kommunikation
             ServerMessage serverMessage = new ServerMessage(serverId, targetServerId, messageType, payload, Instant.now().toString());
             String json = gson.toJson(serverMessage);
 
             String channel = "echocloud:" + (targetServerId.equals("all") ? "all" : targetServerId);
             publishJedis.publish(channel, json);
 
-            // REDIS CHANNEL EVENT FEUERN - Publish
             eventManager.fireRedisChannelEvent(channel, "publish", json);
-
-            // SERVER COMMUNICATION EVENT FEUERN - Success (falls implementiert)
-            // eventManager.fireServerCommunication(targetServerId, messageType, payload, true);
+            eventManager.fireServerCommunication(targetServerId, messageType, payload, true);
 
         } catch (Exception e) {
             logger.error("[EchoCloud][Redis] Fehler beim Senden der Server-Nachricht: " + e.getMessage());
 
-            // SERVER COMMUNICATION EVENT FEUERN - Failed (falls implementiert)
-            // eventManager.fireServerCommunication(targetServerId, messageType, payload, false);
-
+            eventManager.fireServerCommunication(targetServerId, messageType, payload, false);
             scheduleReconnect();
         }
     }
 
-    // Zusätzliche Methode für Performance Metriken
-    public void sendMetric(String metricType, double value, String unit) {
-        if (eventManager != null) {
-            // METRICS EVENT FEUERN
-            // Hier müsste eine entsprechende fireMetrics Methode im EventManager erstellt werden
-            // eventManager.fireMetrics(metricType, value, unit);
-        }
-    }
-
-    // Getter für EventManager (falls externe Klassen Events feuern wollen)
     public EchoCloudEventManager getEventManager() {
         return eventManager;
     }
 
-    // Inner class für Server-zu-Server Nachrichten
+    public CloudStorage getCloudStorage() {
+        return cloudStorage;
+    }
+
     private static class ServerMessage {
         public final String sender_id;
         public final String target_id;

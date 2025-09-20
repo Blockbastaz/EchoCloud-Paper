@@ -16,6 +16,7 @@ public abstract class CloudCommunication {
     protected final String authToken;
     protected final String baseUrl;
     protected final CloudLogger logger;
+    protected volatile boolean connected = false;
     protected final Gson gson = new Gson();
     protected final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     protected final Server server;
@@ -59,6 +60,10 @@ public abstract class CloudCommunication {
 
     public void setHeartbeatTimeout(int seconds) {
         this.heartbeatTimeout = seconds;
+    }
+
+    public boolean isConnected() {
+        return connected;
     }
 
     public abstract void connect();
@@ -161,6 +166,7 @@ public abstract class CloudCommunication {
             String redisUrl = host + ":" + port;
             RedisCommunication redis = new RedisCommunication(redisUrl, serverId, authToken, logger, server);
 
+
             // Redis
             redis.setPassword(config.getString("redis.password", ""));
             redis.setDatabase(config.getInt("redis.database", 0));
@@ -244,4 +250,6 @@ public abstract class CloudCommunication {
             this.start_time = start_time;
         }
     }
+
+
 }

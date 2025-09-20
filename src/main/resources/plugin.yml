@@ -1,4 +1,4 @@
-name: EchoCloud-Paper
+name: echocloud-paper
 version: '1.0'
 main: dev.echocloud.EchoCloud
 api-version: '1.21'
